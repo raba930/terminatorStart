@@ -1,0 +1,48 @@
+#!/bin/bash
+LAYOUTS=$(awk '/^\[[a-z]+\]/ { plugins = 0 } /^\[layouts\]/ { plugins=1 } /^\s+\[\[([a-z]+)\]\]/ { if (plugins) print $1 }' < ~/.config/terminator/config | tr -d '][')
+LAYOUTS_PARSED=(${LAYOUTS//$'\n'/ })
+re='^[0-9]+$'
+
+printMsg() {
+	echo "Enter no. of layout "
+}
+readOption() {
+	read op;
+}
+
+tput clear
+tput rev
+tput cup 2 5
+
+echo "L A Y O U T S: "
+
+tput sgr0
+
+for LAYOUT in ${!LAYOUTS_PARSED[@]}; 
+	do 
+		tput cup $(($LAYOUT + 4)) 3
+		echo " $(($LAYOUT + 1)) ${LAYOUTS_PARSED[$LAYOUT]}";
+ 	done;
+
+tput setaf 6
+tput bold
+tput cup $((${#LAYOUTS_PARSED[@]} + 5)) 3
+
+printMsg
+
+tput cup $((${#LAYOUTS_PARSED[@]} + 5)) 24
+
+readOption;
+CNT=1
+
+while ! [[ $op =~ $re ]] || [ $op -gt ${#LAYOUTS_PARSED[@]} ] || [ $op -lt 1 ]
+do
+	tput cup $((${#LAYOUTS_PARSED[@]} + 5 + $CNT)) 3
+	printMsg
+	tput cup $((${#LAYOUTS_PARSED[@]} + 5 + $CNT)) 24
+	CNT=$((CNT + 1))
+	readOption
+done
+
+$(nohup terminator -l ${LAYOUTS_PARSED[$(($op - 1))]} > /dev/null 2>&1 &)
+exit
